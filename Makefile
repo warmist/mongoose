@@ -15,7 +15,7 @@
 # -DSSL_LIB=\"libssl.so.<version>\"   - use system versioned SSL shared object
 # -DCRYPTO_LIB=\"libcrypto.so.<version>\" - use system versioned CRYPTO so
 # -DUSE_LUA               - embed Lua in Mongoose (+100kb)
-
+# -DUSE_LUA_SQLITE3		  - embed sqlite with lua
 PROG        = mongoose
 CFLAGS      = -std=c99 -O2 -W -Wall -pedantic -pthread $(COPT)
 
@@ -142,15 +142,15 @@ windows: $(ALL_WINOBJS)
 	$(LINK) /nologo $(ALL_WINOBJS) build/res.res /out:$(PROG).exe
 
 # Build for Windows under MinGW
-#MINGWDBG= -DDEBUG -O0 -ggdb
+#MINGWDBG= -DDEBUG -O0 -ggdb -Wl,-subsystem,console
 MINGWDBG= -DNDEBUG -Os
-MINGWOPT=  -W -Wall -mthreads -Wl,--subsystem,console $(MINGWDBG) -DHAVE_STDINT $(GCC_WARNINGS) $(COPT)
+MINGWOPT=  -W -Wall -mthreads -Wl,-subsystem,windows $(MINGWDBG) -DHAVE_STDINT $(GCC_WARNINGS) $(COPT)  $(LUA_FLAGS) $(LUA_SOURCES) 
 mingw:
 	windres build\res.rc build\res.o
-	$(CC) $(MINGWOPT) mongoose.c -lws2_32 \
+	$(CC) $(MINGWOPT) build/lsqlite3.c build/sqlite3.c mongoose.c -lws2_32 \
 		-shared -Wl,--out-implib=$(PROG).lib -o $(PROG).dll
-	$(CC) $(MINGWOPT) mongoose.c main.c build\res.o \
-	-lws2_32 -ladvapi32 -lcomdlg32 -o $(PROG).exe
+	$(CC) $(MINGWOPT) build/lsqlite3.c build/sqlite3.c mongoose.c main.c build\res.o \
+	-lws2_32 -ladvapi32 -lcomdlg32  -o $(PROG).exe
 
 # Build for Windows under Cygwin
 #CYGWINDBG= -DDEBUG -O0 -ggdb
